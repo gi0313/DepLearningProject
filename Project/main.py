@@ -53,7 +53,7 @@ if __name__ == "__main__":
         val_loader=val_loader,
         criterion=criterion,
         optimizer=optimizer_resnet,
-        num_epochs=3,
+        num_epochs=10,
         device=device
     )
 
@@ -90,7 +90,7 @@ if __name__ == "__main__":
         val_loader=val_loader,
         criterion=criterion,
         optimizer=optimizer_googlenet,
-        num_epochs=3,
+        num_epochs=10,
         device=device
     )
 
