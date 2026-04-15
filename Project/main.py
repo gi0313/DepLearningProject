@@ -5,8 +5,7 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 from torchvision import datasets, transforms, models
 from torch.utils.data import DataLoader, random_split
-import seaborn as sns
-import numpy as np
+
 from sklearn.metrics import confusion_matrix
 from models import initialize_models
 
