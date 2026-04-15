@@ -16,7 +16,7 @@ os.makedirs('plots', exist_ok=True)
 
 def plot_fitting_curves(history, model_name="Model", filename="training_curves.png"):
     #Plots the training and test proxy error in one graph training and misclassification together on a separate graph.
-    epochs = range(1, len(history['train_proxy']) + 1)
+    epochs = range(1, len(history['train_loss']) + 1)
 
     #Create a figure with two side-by-side subplots
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))

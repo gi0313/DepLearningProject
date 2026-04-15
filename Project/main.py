@@ -9,6 +9,10 @@ from torch.utils.data import DataLoader, random_split
 from sklearn.metrics import confusion_matrix
 from models import initialize_models
 
+from dataset import get_data
+from training import train_model
+from utils import plot_fitting_curves, plot_confusion_matrix, save_data_checkpoint
+
 # 1. Inject your Kaggle API token directly into the environment
 os.environ['KAGGLE_API_TOKEN'] = "KGAT_f04e9f69e859b8117d064171adfe8a10"
 
@@ -30,19 +34,90 @@ def setup_dataset():
         print("Dataset already exists locally. Skipping download.")
 
 if __name__ == "__main__":
+
     setup_dataset()
 
-    # print(os.listdir("./data/space images"))
+    train_loader, val_loader, class_names = get_data()
+    resnet, googlenet = initialize_models(len(class_names))
+    criterion = nn.CrossEntropyLoss()
 
-    transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
+    optimizer_resnet = optim.SGD(resnet.parameters(), lr=0.001)
+    optimizer_googlenet = optim.SGD(googlenet.parameters(), lr=0.001)
 
-    dataset = datasets.ImageFolder("./data/space images", transform=transform)
-    num_classes = len(dataset.classes)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Training on device: {device}")
 
-    resnet, googlenet = initialize_models(num_classes)
+    model, history = train_model(
+        model=resnet,
+        train_loader=train_loader,
+        val_loader=val_loader,
+        criterion=criterion,
+        optimizer=optimizer_resnet,
+        num_epochs=3,
+        device=device
+    )
 
-    print("ResNet18 and GoogLeNet models initialized with pretrained weights and modified final layers for", num_classes, "classes.")
+    save_data_checkpoint(history, filename="resnet_history.json")
+
+    plot_fitting_curves(history, model_name="ResNet18", filename="resnet_training_curves.png")
+
+    y_true = []
+    y_pred = []
+
+    model.eval()
+
+    with torch.no_grad():
+        for inputs, labels in val_loader:
+            inputs = inputs.to(device)
+
+            outputs = model(inputs)
+            preds = torch.argmax(outputs, dim=1).cpu()
+
+            y_pred.extend(preds.tolist())
+            y_true.extend(labels.tolist())
+
+    plot_confusion_matrix(
+        y_true= y_true,
+        y_pred= y_pred,
+        class_names=class_names,
+        model_name="ResNet18",
+        filename="resnet_confusion_matrix.png"
+    )
+
+    model, history = train_model(
+        model=googlenet,
+        train_loader=train_loader,
+        val_loader=val_loader,
+        criterion=criterion,
+        optimizer=optimizer_googlenet,
+        num_epochs=3,
+        device=device
+    )
+
+    save_data_checkpoint(history, filename="googlenet_history.json")
+
+    plot_fitting_curves(history, model_name="GoogLeNet", filename="googlenet_training_curves.png")
+
+    y_true = []
+    y_pred = []
+
+    model.eval()
+
+    with torch.no_grad():
+        for inputs, labels in val_loader:
+            inputs = inputs.to(device)
+
+            outputs = model(inputs)
+            preds = torch.argmax(outputs, dim=1).cpu()
+
+            y_pred.extend(preds.tolist())
+            y_true.extend(labels.tolist())
+
+    plot_confusion_matrix(
+        y_true=[label for _, label in val_loader.dataset],
+        y_pred=[torch.argmax(model(inputs.to(device))).item() for inputs, _ in val_loader],
+        class_names=class_names,
+        model_name="GoogLeNet",
+        filename="googlenet_confusion_matrix.png"
+    )
+
