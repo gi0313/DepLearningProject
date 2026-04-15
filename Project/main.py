@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     setup_dataset()
 
-    train_loader, val_loader, class_names = get_data()
+    train_loader, val_loader, class_names = get_data("data\space images", batch_size=32)
     resnet, googlenet = initialize_models(len(class_names))
     criterion = nn.CrossEntropyLoss()
 
@@ -114,8 +114,8 @@ if __name__ == "__main__":
             y_true.extend(labels.tolist())
 
     plot_confusion_matrix(
-        y_true=[label for _, label in val_loader.dataset],
-        y_pred=[torch.argmax(model(inputs.to(device))).item() for inputs, _ in val_loader],
+        y_true=y_true,
+        y_pred=y_pred,
         class_names=class_names,
         model_name="GoogLeNet",
         filename="googlenet_confusion_matrix.png"

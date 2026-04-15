@@ -54,3 +54,4 @@ if __name__ == "__main__":
     # Assuming your Kaggle data is unzipped into a folder called 'data'
     os.makedirs('data', exist_ok=True)
     print("Dataset module ready. Make sure your images are inside the 'data' folder!")
+    train_loader, val_loader, class_names = get_data("data\space images", batch_size=32)
